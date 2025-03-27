@@ -21,10 +21,10 @@ provider "google" {
 
 # Create a globally unique GCS bucket for function code and artifacts
 resource "google_storage_bucket" "function_bucket" {
-  name     = "${var.gcp_project_id}-${var.storage_bucket_name}-bucket"
-  location = var.gcp_region
+  name                        = "${var.gcp_project_id}-${var.storage_bucket_name}-bucket"
+  location                    = var.gcp_region
   uniform_bucket_level_access = true
-  force_destroy = true  # Allow Terraform to destroy the bucket even if it contains objects
+  force_destroy               = true # Allow Terraform to destroy the bucket even if it contains objects
 }
 
 # Create a Pub/Sub topic to receive Security Command Center findings
@@ -36,16 +36,16 @@ resource "google_pubsub_topic" "scc_findings_topic" {
 resource "google_pubsub_subscription" "scc_findings_subscription" {
   name  = "${var.pubsub_topic_name}-subscription"
   topic = google_pubsub_topic.scc_findings_topic.name
-  
-  ack_deadline_seconds = 60  # Time to acknowledge the message
-  
+
+  ack_deadline_seconds = 60 # Time to acknowledge the message
+
   # Configure message retention
-  message_retention_duration = "604800s"  # 7 days
-  
+  message_retention_duration = "604800s" # 7 days
+
   # Retry policy
   retry_policy {
     minimum_backoff = "10s"
-    maximum_backoff = "600s"  # Max of 10 minutes
+    maximum_backoff = "600s" # Max of 10 minutes
   }
 }
 
@@ -82,24 +82,23 @@ resource "google_cloudfunctions_function" "scc_findings_processor" {
   name        = "scc-findings-processor"
   description = "Processes Security Command Center findings using Gemini AI"
   runtime     = "python310"
-  
+
   available_memory_mb   = 256
   source_archive_bucket = google_storage_bucket.function_bucket.name
   source_archive_object = google_storage_bucket_object.function_source.name
-  
+
   event_trigger {
     event_type = "google.pubsub.topic.publish"
     resource   = google_pubsub_topic.scc_findings_topic.name
   }
-  
+
   entry_point = "process_scc_finding"
-  
+
   environment_variables = {
-    "PROJECT_ID"     = var.gcp_project_id
-    "LOCATION"       = "us-central1"
-    "GEMINI_API_KEY" = var.gemini_api_key  # Using variable instead of hardcoded key
+    "PROJECT_ID" = var.gcp_project_id
+    "LOCATION"   = "us-central1"
   }
-  
+
   service_account_email = "${var.service_account_id}@${var.gcp_project_id}.iam.gserviceaccount.com"
 }
 
@@ -118,17 +117,17 @@ resource "google_project_iam_binding" "function_scc_viewer" {
 
 # Output the Pub/Sub topic name for use in the Security Command Center notification configuration
 output "pubsub_topic_name" {
-  value = google_pubsub_topic.scc_findings_topic.name
+  value       = google_pubsub_topic.scc_findings_topic.name
   description = "The name of the Pub/Sub topic to use in Security Command Center notification configuration"
 }
 
 output "service_account_email" {
-  value = "${var.service_account_id}@${var.gcp_project_id}.iam.gserviceaccount.com"
+  value       = "${var.service_account_id}@${var.gcp_project_id}.iam.gserviceaccount.com"
   description = "The email of the service account used for this project"
 }
 
 output "storage_bucket" {
-  value = google_storage_bucket.function_bucket.name
+  value       = google_storage_bucket.function_bucket.name
   description = "The name of the storage bucket for function code and artifacts"
 }
 
