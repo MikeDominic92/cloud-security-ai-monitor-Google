@@ -102,21 +102,138 @@ This project follows security best practices by:
 * Securing function invocation
 * Encrypting data in transit and at rest
 
-## Testing It Out
+## Testing the Project
 
-Want to try the Gemini integration without deploying everything?
+If you're evaluating this project, here are different ways to test it - from simplest to most comprehensive:
+
+### Option 1: Quick Demo Without Deployment
+
+Want to see the AI analysis without setting up GCP? Run the local simulator:
 
 ```bash
+# Install dependencies
 cd src/ai
 pip install -r requirements.txt
+
+# Set your API key as an environment variable
+$env:GEMINI_API_KEY = "your_gemini_api_key"
+
+# Run the test script
 python gemini_test.py
 ```
 
-Or simulate processing security findings locally:
+You'll see a sample security finding analyzed by Gemini AI with severity validation, impact analysis, and remediation steps.
+
+### Option 2: Simulate a Finding Locally
+
+For a more complete test that simulates the Cloud Function processing:
 
 ```bash
+# Install dependencies
 cd src
+pip install -r ../src/functions/security_findings_processor/requirements.txt
+
+# Set your API key as an environment variable
+$env:GEMINI_API_KEY = "your_gemini_api_key"
+
+# Run the simulator
 python simulate_finding.py
+```
+
+This runs the actual Cloud Function code locally against sample findings. Follow the prompts to select different test scenarios.
+
+### Option 3: Full GCP Deployment Testing
+
+After deployment, test the complete system:
+
+1. **Manually trigger a message**:
+
+```bash
+# Create a sample finding message
+$MESSAGE = @"
+{
+  "finding": {
+    "name": "organizations/123456789/sources/5678/findings/test-finding-01",
+    "parent": "organizations/123456789/sources/5678",
+    "resourceName": "//storage.googleapis.com/projects/security-ai-monitor-2025/buckets/test-bucket",
+    "state": "ACTIVE",
+    "category": "PUBLIC_BUCKET_ACL",
+    "severity": "HIGH",
+    "description": "Test security finding for GCP AI Security Monitor",
+    "sourceProperties": {
+      "ReactivationCount": 0,
+      "SeverityLevel": "High",
+      "ProjectId": "security-ai-monitor-2025"
+    },
+    "createTime": "2025-03-27T14:23:30Z"
+  }
+}
+"@
+
+# Encode and publish to Pub/Sub
+$ENCODED = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($MESSAGE))
+gcloud pubsub topics publish scc-notifications-topic --message=$ENCODED --project=security-ai-monitor-2025
+```
+
+2. **Check the Cloud Function logs**:
+
+```bash
+gcloud functions logs read scc-findings-processor --limit=50 --project=security-ai-monitor-2025
+```
+
+You should see:
+* "Received security finding: organizations/123456789/sources/5678/findings/test-finding-01"
+* "Generated AI analysis for finding"
+* The complete AI analysis content
+
+3. **Create a real security finding**:
+
+If you want to test with a real security finding:
+* Create a public Cloud Storage bucket in your project
+* Go to Security Command Center to see the finding
+* Verify in logs that your function processed it
+
+### What You'll See
+
+When working correctly, the system:
+1. Receives security findings from Security Command Center
+2. Processes them using the Cloud Function
+3. Analyzes them with Gemini 2.0 Flash
+4. Generates a security assessment with:
+   * Severity validation (Is the assigned severity appropriate?)
+   * Impact analysis (What could be the consequences?)
+   * Remediation steps (How to fix the issue)
+   * Related threats (What attack patterns are associated?)
+
+The output looks like this:
+
+```plaintext
+===== GEMINI AI SECURITY ASSESSMENT =====
+
+SECURITY FINDING ANALYSIS
+Finding: PUBLIC_BUCKET_ACL in vulnerable-bucket
+Severity: HIGH
+
+1. SEVERITY VALIDATION
+The HIGH severity assigned is appropriate. Public storage buckets can expose sensitive data to anyone on the internet, creating significant security risk.
+
+2. IMPACT ANALYSIS
+* Unauthorized data access and potential data leakage
+* Potential compliance violations (GDPR, HIPAA, etc.)
+* Data tampering or poisoning attacks
+* Reputational damage if sensitive information is exposed
+
+3. MITIGATION RECOMMENDATIONS
+* Immediately restrict bucket access to appropriate principals only
+* Remove all "allUsers" and "allAuthenticatedUsers" permissions
+* Implement proper IAM roles with least privilege
+* Enable Cloud Audit Logs to monitor bucket access
+* Consider using Object Versioning to recover from tampering
+
+4. RELATED THREATS
+CWE-284: Improper Access Control
+MITRE ATT&CK: Initial Access (T1190)
+OWASP Top 10: A5:2021 – Security Misconfiguration
 ```
 
 ## Architecture
