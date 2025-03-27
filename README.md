@@ -1,71 +1,80 @@
-# GCP AI Security Monitor & Response System
+# GCP AI Security Monitor
 
-This project is building an autonomous system to monitor a Google Cloud Platform (GCP) environment for security threats. It uses AI and machine learning not just to detect issues, but also to predict potential threats and automatically trigger responses.
+I built this project to create a smart security monitoring system for Google Cloud Platform environments. It uses Gemini AI to analyze security findings and provide insights that go beyond basic alerting.
 
-The main idea is to create something more advanced than a standard SIEM. By integrating predictive analytics and automated remediation, the system aims to proactively handle security incidents in a complex cloud setup.
+## The Idea Behind This
 
-## Project Goal
+Working in cloud security, I've noticed that standard monitoring tools often just tell you what happened without much context. This system tries to solve that by using AI to understand security findings, assess their severity, and suggest practical fixes.
 
-I'm building this to demonstrate practical skills in modern cloud security operations, specifically:
+The project combines GCP's Security Command Center with the Gemini 2.0 Flash model to create something that doesn't just detect issues but actually helps you understand and fix them.
 
-* Applying AI/ML for smarter threat detection and prediction.
-* Automating incident response in a GCP environment.
-* Working with various GCP security services and tools.
+## What It Does
 
-This project is designed to showcase the kind of proactive, automated security approach relevant for a SOC Analyst role.
+When Security Command Center finds a potential issue, the system:
 
-## Tech Stack
+1. Captures the finding details through a Pub/Sub message
+2. Processes it with a Cloud Function
+3. Sends it to Gemini AI for analysis
+4. Returns a comprehensive assessment including:
+   * Validation of the severity level
+   * Impact analysis
+   * Specific remediation steps
+   * Related threat patterns
 
-* **Cloud:** Google Cloud Platform (GCP)
-* **AI/ML:** Google AI Platform (Vertex AI) for model training (anomaly detection, threat prediction).
-* **Automation:** Google Cloud Functions for executing response actions.
-* **Security Data:** GCP Security Command Center for ingesting alerts.
-* **Orchestration:** Shuffle Automation (or potentially Google Chronicle SOAR) for managing response workflows.
-* **Language:** Python
-* **IaC:** Terraform to manage the GCP infrastructure.
+## Tech I Used
 
-## Setup Instructions
+* Google Cloud Platform services (Security Command Center, Pub/Sub, Cloud Functions)
+* Gemini 2.0 Flash model for AI analysis
+* Python for implementation
+* Terraform for infrastructure as code
 
-### Prerequisites
+## Setting It Up
 
-* Google Cloud Platform account with billing enabled
+You'll need:
+
+* A GCP account with billing
 * Terraform installed locally
-* Python 3.9+ installed
-* Google Cloud SDK installed
+* Python 3.9+
+* Google Cloud SDK
 
-### Step 1: Clone the Repository
+### Full Setup Process
+
+1. **Clone the repo**
 
 ```bash
-git clone https://github.com/yourusername/cloud-security-ai-monitor.git
-cd cloud-security-ai-monitor
+git clone https://github.com/MikeDominic92/cloud-security-ai-monitor-Google.git
+cd cloud-security-ai-monitor-Google
 ```
 
-### Step 2: Configure Google Cloud Authentication
+2. **Authenticate with Google Cloud**
 
 ```bash
-# Authenticate with Google Cloud
 gcloud auth login
-
-# Set up application default credentials
 gcloud auth application-default login
-
-# Set your project ID
 gcloud config set project security-ai-monitor-2025
 ```
 
-### Step 3: Enable Required APIs
+3. **Enable required APIs**
 
 ```bash
-# Enable required APIs
 gcloud services enable cloudfunctions.googleapis.com
 gcloud services enable pubsub.googleapis.com
 gcloud services enable securitycenter.googleapis.com
 gcloud services enable storage.googleapis.com
 gcloud services enable iam.googleapis.com
 gcloud services enable aiplatform.googleapis.com
+gcloud services enable secretmanager.googleapis.com
 ```
 
-### Step 4: Deploy Infrastructure with Terraform
+4. **Set up the Gemini API key in Secret Manager**
+
+This script securely stores your API key in GCP Secret Manager:
+
+```bash
+./setup_secrets.ps1 security-ai-monitor-2025
+```
+
+5. **Deploy infrastructure with Terraform**
 
 ```bash
 cd terraform
@@ -73,33 +82,29 @@ terraform init
 terraform apply -var="gcp_project_id=security-ai-monitor-2025"
 ```
 
-### Step 5: Configure Security Command Center Notifications
+6. **Configure Security Command Center notifications**
 
-After deploying the infrastructure, you need to configure Security Command Center to send findings to the Pub/Sub topic:
+After deployment, set up SCC to send findings to your Pub/Sub topic:
 
-1. Go to Security Command Center in the Google Cloud Console
+1. Go to Security Command Center in the console
 2. Navigate to Settings > Notifications
-3. Create a new notification with the following settings:
+3. Create a notification with:
    * Name: `ai-monitor-notifications`
-   * Pubsub topic: Use the topic name from Terraform output
+   * Pubsub topic: Use the topic from Terraform output
    * Filter: `severity="HIGH" OR severity="CRITICAL"`
 
-## Usage
+### Security Best Practices
 
-Once deployed, the system will automatically:
+This project follows security best practices by:
 
-1. Receive Security Command Center findings via Pub/Sub
-2. Process the findings using Cloud Functions
-3. Analyze the security findings with Gemini AI
-4. Generate detailed security assessments including:
-   * Severity validation
-   * Impact analysis
-   * Mitigation recommendations
-   * Related threats and attack patterns
+* Storing API keys in Secret Manager, not in code
+* Using least-privilege service accounts
+* Securing function invocation
+* Encrypting data in transit and at rest
 
-## Testing
+## Testing It Out
 
-To test the Gemini API integration without deploying to GCP:
+Want to try the Gemini integration without deploying everything?
 
 ```bash
 cd src/ai
@@ -107,7 +112,7 @@ pip install -r requirements.txt
 python gemini_test.py
 ```
 
-To simulate processing security findings locally:
+Or simulate processing security findings locally:
 
 ```bash
 cd src
@@ -137,25 +142,25 @@ This project includes an API key for demonstration purposes. In a production env
 
 ```plaintext
 cloud-security-ai-monitor/
-├── terraform/             # Infrastructure as Code definitions
+├── terraform/             # Infrastructure code
 ├── src/
 │   ├── functions/         # Cloud Function code
 │   │   └── security_findings_processor/
-│   │       ├── main.py    # Function implementation
+│   │       ├── main.py    # Main function code
 │   │       └── requirements.txt
-│   └── ai/                # AI model testing scripts
+│   └── ai/                # AI testing scripts
 │       ├── gemini_test.py
 │       └── requirements.txt
-└── setup_gcp_environment.ps1  # GCP setup script
+└── setup_gcp_environment.ps1  # Setup script
 ```
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Got ideas? Feel free to submit a pull request!
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project uses the MIT License - see the LICENSE file for details.
 
 ## Current Progress
 

@@ -7,6 +7,7 @@ import google.cloud.logging
 import logging
 import vertexai
 from vertexai.generative_models import GenerativeModel, Content
+from google.cloud import secretmanager
 
 # Initialize logging
 logging_client = google.cloud.logging.Client()
@@ -15,7 +16,29 @@ logging_client.setup_logging()
 # Get configuration from environment variables
 PROJECT_ID = os.environ.get("PROJECT_ID")
 LOCATION = os.environ.get("LOCATION")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Function to get secrets from Secret Manager
+def access_secret(secret_id, version_id="latest"):
+    """
+    Access the secret from Google Secret Manager.
+    """
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{PROJECT_ID}/secrets/{secret_id}/versions/{version_id}"
+    response = client.access_secret_version(request={"name": name})
+    return response.payload.data.decode("UTF-8")
+
+# Get API key from Secret Manager (will be created during setup)
+try:
+    GEMINI_API_KEY = access_secret("gemini-api-key")
+    logging.info("Successfully retrieved Gemini API key from Secret Manager")
+except Exception as e:
+    logging.error(f"Error accessing Gemini API key from Secret Manager: {str(e)}")
+    # For development/testing fallback only
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+    if GEMINI_API_KEY:
+        logging.warning("Using GEMINI_API_KEY from environment variable as fallback")
+    else:
+        logging.error("No Gemini API key available - function will fail")
 
 # Set up the Vertex AI client with configurations
 vertexai.init(project=PROJECT_ID, location=LOCATION)
