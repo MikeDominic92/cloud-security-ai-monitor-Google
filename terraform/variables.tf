@@ -39,3 +39,9 @@ variable "ai_model_name" {
   type        = string
   default     = "gemini-2.0-flash"
 }
+
+variable "gemini_api_key" {
+  description = "API key for Gemini AI (DO NOT hardcode this value - pass it as a variable)"
+  type        = string
+  sensitive   = true  # Marks this as sensitive so it won't appear in logs
+}

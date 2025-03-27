@@ -12,14 +12,16 @@ from vertexai.generative_models import GenerativeModel, Content
 logging_client = google.cloud.logging.Client()
 logging_client.setup_logging()
 
-# Initialize Vertex AI with project and location
-PROJECT_ID = os.environ.get("PROJECT_ID", "")
-LOCATION = os.environ.get("LOCATION", "us-central1")
+# Get configuration from environment variables
+PROJECT_ID = os.environ.get("PROJECT_ID")
+LOCATION = os.environ.get("LOCATION")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Set up the Vertex AI client with configurations
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 
-# Initialize the Gemini model - using Gemini 2.0 Flash specifically
+# Configure the generative model
 MODEL_NAME = "gemini-2.0-flash"
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyDtv9mid4t0_zj3OLl-UceA7SgKQjw5_RQ")
 
 def get_gemini_analysis(finding_data):
     """

@@ -95,9 +95,9 @@ resource "google_cloudfunctions_function" "scc_findings_processor" {
   entry_point = "process_scc_finding"
   
   environment_variables = {
-    PROJECT_ID     = var.gcp_project_id
-    LOCATION       = var.gcp_region
-    GEMINI_API_KEY = "AIzaSyDtv9mid4t0_zj3OLl-UceA7SgKQjw5_RQ"  # Using the API key directly for this demo
+    "PROJECT_ID"     = var.gcp_project_id
+    "LOCATION"       = "us-central1"
+    "GEMINI_API_KEY" = var.gemini_api_key  # Using variable instead of hardcoded key
   }
   
   service_account_email = "${var.service_account_id}@${var.gcp_project_id}.iam.gserviceaccount.com"

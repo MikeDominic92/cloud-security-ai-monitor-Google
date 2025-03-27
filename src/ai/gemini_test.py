@@ -8,12 +8,42 @@ using the Gemini 2.0 Flash model to analyze a sample security finding.
 
 import os
 import json
-import google.generativeai as genai
+import vertexai
+from vertexai.generative_models import GenerativeModel
 from datetime import datetime
 
-# Set API key
-GEMINI_API_KEY = "AIzaSyDtv9mid4t0_zj3OLl-UceA7SgKQjw5_RQ"  # API key provided by user
-genai.configure(api_key=GEMINI_API_KEY)
+# Load API key from environment variable or .env file
+def get_api_key():
+    # Try to get from environment
+    api_key = os.environ.get("GEMINI_API_KEY")
+    
+    # If not in environment, try to load from .env file
+    if not api_key:
+        try:
+            if os.path.exists(".env"):
+                with open(".env", "r") as f:
+                    for line in f:
+                        if line.startswith("GEMINI_API_KEY="):
+                            api_key = line.strip().split("=")[1].strip('"').strip("'")
+                            break
+        except Exception as e:
+            print(f"Error loading .env file: {e}")
+    
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not found in environment variables or .env file")
+    
+    return api_key
+
+# Initialize Vertex AI
+PROJECT_ID = os.environ.get("PROJECT_ID", "security-ai-monitor-2025")
+LOCATION = os.environ.get("LOCATION", "us-central1")
+GEMINI_API_KEY = get_api_key()
+
+# Set up the Vertex AI client
+vertexai.init(project=PROJECT_ID, location=LOCATION)
+
+# Configure the generative model
+MODEL_NAME = "gemini-2.0-flash"
 
 # Sample security finding for testing
 SAMPLE_FINDING = {
@@ -45,7 +75,7 @@ def test_gemini_integration():
     """Test the Gemini model with a sample security finding."""
     try:
         # Create the model - specifically using gemini-2.0-flash as requested
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = GenerativeModel(MODEL_NAME)
         
         # Format the finding data for the prompt
         finding_name = SAMPLE_FINDING.get("name", "Unknown")
@@ -80,7 +110,7 @@ def test_gemini_integration():
         # Print the response
         print("\n===== GEMINI API TEST RESULTS =====\n")
         print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"Model: gemini-2.0-flash")
+        print(f"Model: {MODEL_NAME}")
         print(f"Status: {'SUCCESS - API is working!' if response.text else 'FAILED - Empty response'}")
         print("\n===== SAMPLE SECURITY ASSESSMENT =====\n")
         if response.text:
@@ -93,7 +123,7 @@ def test_gemini_integration():
     except Exception as e:
         print("\n===== GEMINI API TEST RESULTS =====\n")
         print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"Model: gemini-2.0-flash")
+        print(f"Model: {MODEL_NAME}")
         print(f"Status: FAILED - API error")
         print(f"Error: {str(e)}")
         return False
