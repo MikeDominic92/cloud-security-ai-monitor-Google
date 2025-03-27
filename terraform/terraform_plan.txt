@@ -1,0 +1,169 @@
+data.archive_file.function_zip: Reading...
+data.archive_file.function_zip: Read complete after 0s [id=a336077391413a3db700a54d87cff2ef0bdf48d8]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # google_cloudfunctions_function.scc_findings_processor will be created
+  + resource "google_cloudfunctions_function" "scc_findings_processor" {
+      + available_memory_mb           = 256
+      + build_service_account         = (known after apply)
+      + description                   = "Processes Security Command Center findings using Gemini AI"
+      + docker_registry               = (known after apply)
+      + effective_labels              = (known after apply)
+      + entry_point                   = "process_scc_finding"
+      + environment_variables         = {
+          + "LOCATION"   = "us-central1"
+          + "PROJECT_ID" = "security-ai-project"
+        }
+      + https_trigger_security_level  = (known after apply)
+      + https_trigger_url             = (known after apply)
+      + id                            = (known after apply)
+      + ingress_settings              = "ALLOW_ALL"
+      + max_instances                 = (known after apply)
+      + name                          = "scc-findings-processor"
+      + project                       = "security-ai-project"
+      + region                        = "us-central1"
+      + runtime                       = "python310"
+      + service_account_email         = "ai-security-monitor-sa@security-ai-project.iam.gserviceaccount.com"
+      + source_archive_bucket         = "security-ai-project-monitor-bucket"
+      + source_archive_object         = "function-source-d5b753329bac0856d3ba3e175fd934f7.zip"
+      + status                        = (known after apply)
+      + terraform_labels              = (known after apply)
+      + timeout                       = 60
+      + version_id                    = (known after apply)
+      + vpc_connector_egress_settings = (known after apply)
+
+      + event_trigger {
+          + event_type = "google.pubsub.topic.publish"
+          + resource   = "scc-findings-topic"
+
+          + failure_policy (known after apply)
+        }
+    }
+
+  # google_project_iam_binding.function_scc_viewer will be created
+  + resource "google_project_iam_binding" "function_scc_viewer" {
+      + etag    = (known after apply)
+      + id      = (known after apply)
+      + members = [
+          + "serviceAccount:ai-security-monitor-sa@security-ai-project.iam.gserviceaccount.com",
+        ]
+      + project = "security-ai-project"
+      + role    = "roles/securitycenter.findingsViewer"
+    }
+
+  # google_pubsub_subscription.scc_findings_subscription will be created
+  + resource "google_pubsub_subscription" "scc_findings_subscription" {
+      + ack_deadline_seconds       = 60
+      + effective_labels           = (known after apply)
+      + id                         = (known after apply)
+      + message_retention_duration = "604800s"
+      + name                       = "scc-findings-topic-subscription"
+      + project                    = "security-ai-project"
+      + terraform_labels           = (known after apply)
+      + topic                      = "scc-findings-topic"
+
+      + expiration_policy (known after apply)
+
+      + retry_policy {
+          + maximum_backoff = "600s"
+          + minimum_backoff = "10s"
+        }
+    }
+
+  # google_pubsub_subscription_iam_binding.subscription_subscriber will be created
+  + resource "google_pubsub_subscription_iam_binding" "subscription_subscriber" {
+      + etag         = (known after apply)
+      + id           = (known after apply)
+      + members      = [
+          + "serviceAccount:ai-security-monitor-sa@security-ai-project.iam.gserviceaccount.com",
+        ]
+      + project      = (known after apply)
+      + role         = "roles/pubsub.subscriber"
+      + subscription = "scc-findings-topic-subscription"
+    }
+
+  # google_pubsub_topic.scc_findings_topic will be created
+  + resource "google_pubsub_topic" "scc_findings_topic" {
+      + effective_labels = (known after apply)
+      + id               = (known after apply)
+      + name             = "scc-findings-topic"
+      + project          = "security-ai-project"
+      + terraform_labels = (known after apply)
+
+      + message_storage_policy (known after apply)
+
+      + schema_settings (known after apply)
+    }
+
+  # google_pubsub_topic_iam_binding.topic_publisher will be created
+  + resource "google_pubsub_topic_iam_binding" "topic_publisher" {
+      + etag    = (known after apply)
+      + id      = (known after apply)
+      + members = [
+          + "serviceAccount:ai-security-monitor-sa@security-ai-project.iam.gserviceaccount.com",
+        ]
+      + project = (known after apply)
+      + role    = "roles/pubsub.publisher"
+      + topic   = "scc-findings-topic"
+    }
+
+  # google_storage_bucket.function_bucket will be created
+  + resource "google_storage_bucket" "function_bucket" {
+      + effective_labels            = (known after apply)
+      + force_destroy               = true
+      + id                          = (known after apply)
+      + location                    = "US-CENTRAL1"
+      + name                        = "security-ai-project-monitor-bucket"
+      + project                     = (known after apply)
+      + project_number              = (known after apply)
+      + public_access_prevention    = (known after apply)
+      + rpo                         = (known after apply)
+      + self_link                   = (known after apply)
+      + storage_class               = "STANDARD"
+      + terraform_labels            = (known after apply)
+      + uniform_bucket_level_access = true
+      + url                         = (known after apply)
+
+      + soft_delete_policy (known after apply)
+
+      + versioning (known after apply)
+
+      + website (known after apply)
+    }
+
+  # google_storage_bucket_object.function_source will be created
+  + resource "google_storage_bucket_object" "function_source" {
+      + bucket         = "security-ai-project-monitor-bucket"
+      + content        = (sensitive value)
+      + content_type   = (known after apply)
+      + crc32c         = (known after apply)
+      + detect_md5hash = "different hash"
+      + generation     = (known after apply)
+      + id             = (known after apply)
+      + kms_key_name   = (known after apply)
+      + md5hash        = (known after apply)
+      + media_link     = (known after apply)
+      + name           = "function-source-d5b753329bac0856d3ba3e175fd934f7.zip"
+      + output_name    = (known after apply)
+      + self_link      = (known after apply)
+      + source         = "function-source.zip"
+      + storage_class  = (known after apply)
+    }
+
+Plan: 8 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + function_url          = (known after apply)
+  + pubsub_topic_name     = "scc-findings-topic"
+  + service_account_email = "ai-security-monitor-sa@security-ai-project.iam.gserviceaccount.com"
+  + storage_bucket        = "security-ai-project-monitor-bucket"
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.

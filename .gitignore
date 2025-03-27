@@ -131,6 +131,34 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# Terraform files
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+terraform_plan_output.txt
+*.tfvars
+
+# GCP credentials
+*.json
+service-account-*.json
+application_default_credentials.json
+
+# Local environment files
+.env
+.env.local
+.venv
+env/
+venv/
+
+# Analysis results
+src/analysis_results/
+
+# Google Cloud credentials
+credentials/
+*.json
+!package.json
+
 # Terraform specific
 **/.terraform/
 *.tfstate

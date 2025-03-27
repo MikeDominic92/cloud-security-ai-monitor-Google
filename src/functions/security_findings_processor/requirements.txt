@@ -1,0 +1,5 @@
+functions-framework==3.4.0
+google-cloud-pubsub==2.18.0
+google-cloud-logging==3.8.0
+vertexai==0.0.1
+google-cloud-aiplatform==1.36.0
