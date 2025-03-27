@@ -2,4 +2,3 @@ functions-framework>=3.0.0
 google-cloud-pubsub>=2.0.0
 google-cloud-logging>=3.0.0
 google-cloud-aiplatform>=1.0.0
-google-cloud-secretmanager>=2.0.0
